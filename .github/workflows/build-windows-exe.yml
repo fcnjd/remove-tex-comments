@@ -1,0 +1,58 @@
+name: Build Windows EXE and Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main  # oder den Branch deiner Wahl
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+      
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+
+    - name: Build the executables with PyInstaller
+      run: |
+        pyinstaller --onefile --windowed remove_comments_gui.py
+        pyinstaller --onefile remove_comments_cli.py
+
+    - name: Zip the exe
+      run: Compress-Archive -Path dist/* -DestinationPath remove_tex_comments_windows.zip
+
+    - name: Upload EXE as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: remove-tex-comments-windows
+        path: remove_tex_comments_windows.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: remove-tex-comments-windows
+
+    - uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest"
+        prerelease: true
+        title: "Development Build"
+        files: |
+          remove_tex_comments_windows.zip
+
+
