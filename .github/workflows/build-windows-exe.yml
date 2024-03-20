@@ -1,0 +1,67 @@
+name: Build Windows EXE and Release
+
+on:
+  push:
+    branches:
+      - main  # oder den Branch deiner Wahl
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+      
+    - name: Install PyInstaller
+      run: pip install pyinstaller
+
+    - name: Build the exe with PyInstaller
+      run: pyinstaller --onefile --windowed remove_comments_gui.py
+      run: pyinstaller --onefile remove_comments_cli.py
+
+    - name: Zip the exe
+      run: Compress-Archive -Path dist/* -DestinationPath remove_tex_comments_windows.zip
+
+    - name: Upload EXE as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: remove-tex-comments-windows
+        path: remove_tex_comments_windows.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: remove-tex-comments-windows
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.sha }}
+        draft: false
+        prerelease: false
+        body: "Release automatically created after commit"
+    
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # Dieser Wert ist der Upload-URL, die von der Create Release-Aktion zurückgegeben wird
+        asset_path: ./remove_tex_comments_windows.zip
+        asset_name: remove_tex_comments_windows.zip
+        asset_content_type: application/zip

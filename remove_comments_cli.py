@@ -19,15 +19,18 @@ def main():
 	else:
 		output_file = open(args.output, 'w')
 	# Open the file and read it
-	with open(args.input, 'r') as f:
+	process_tex(args_input, output_file)
+def process_tex(input, output):
+	with open(input, 'r') as f:
 		for line in f:
 			# Remove comments
 			if not line.startswith('%'):
 				# Write to the output
-				output_file.write(line)
+				output.write(line)
 	# Close the output file
-	if output_file != sys.stdout:
-		output_file.close()
+	if output != sys.stdout:
+		output.close()
+
 
 if __name__ == '__main__':
 	main()
