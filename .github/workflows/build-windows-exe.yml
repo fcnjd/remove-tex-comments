@@ -22,9 +22,10 @@ jobs:
     - name: Install PyInstaller
       run: pip install pyinstaller
 
-    - name: Build the exe with PyInstaller
-      run: pyinstaller --onefile --windowed remove_comments_gui.py
-      run: pyinstaller --onefile remove_comments_cli.py
+    - name: Build the executables with PyInstaller
+      run: |
+        pyinstaller --onefile --windowed remove_comments_gui.py
+        pyinstaller --onefile remove_comments_cli.py
 
     - name: Zip the exe
       run: Compress-Archive -Path dist/* -DestinationPath remove_tex_comments_windows.zip
